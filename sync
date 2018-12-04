@@ -1,0 +1,22 @@
+#!/bin/bash
+
+terraform_dir=$(which terraform)
+terraform_version=$(terraform state pull | jq -r '.terraform_version')
+arch_type=$(uname -mrs | cut -f1 -d" ")
+function int {
+ echo "$@" | awk -F "." '{ printf("%03d%03d%03d\n", $1,$2,$3); }';
+}
+if [ ${arch_type} = "Linux" ]
+then
+  os=linux_amd64
+else
+  os=darwin_amd64
+fi
+
+local_tf_version=$(terraform version | sed '1!d' | tr -d 'Terraform v')
+if [ "$(int $terraform_version)" -gt "$(int $local_tf_version)" ];
+then
+  wget https://releases.hashicorp.com/terraform/${terraform_version}/terraform_${terraform_version}_$os.zip && unzip terraform_${terraform_version}_${os}.zip && mv terraform ${terraform_dir} && rm *.zip
+else
+  echo "Your version of Terraform is compatible."
+fi
