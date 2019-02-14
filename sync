@@ -18,12 +18,12 @@ wget https://releases.hashicorp.com/terraform/$tf_latest_version/terraform_$tf_l
 tf="terraform"
 for check in "$tf"
 do
-  type $check >/dev/null 2>&1 || { echo >&2 "You don't even have $tf installed!"; read -p "Would you like to install/upgrade $tf?" yn;  }
+  type $check >/dev/null 2>&1 || { echo >&2 "You don't even have $tf installed!" && read -p "Would you like to install/upgrade $tf?" yn;  }
 done
 
 case $yn in
   [Yy]* ) tf_latest_install;;
-  [Nn]* ) ;;
+  [Nn]* ) exit 1;;
 esac
 
 tf_file=`ls -1 *.tf 2>/dev/null | wc -l`
