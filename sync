@@ -22,7 +22,13 @@ check () {
 if check terraform; then
   continue
 else
-  read -p "Would you like to install/upgrade $tf?" yn
+  echo "Would you like to install/upgrade $tf?"
+fi
+
+if check terraform; then
+  continue
+else
+  read yn
 fi
 
 case $yn in
