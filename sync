@@ -1,5 +1,13 @@
 #!/bin/sh
 
+set -e
+
+tf="terraform"
+for bin in "${tf}"
+do
+   type $bin >/dev/null 2>&1 || { echo >&2 "This script is for managing $bin. Please install $bin before using."; exit 1; }
+done
+
 arch_type=$(uname -mrs | cut -f1 -d" ")
 int() {
  echo "$@" | awk -F "." '{ printf("%03d%03d%03d\n", $1,$2,$3); }'; 
@@ -10,32 +18,6 @@ then
 else
   os=darwin_amd64
 fi
-tf_latest_version=$(echo "$(curl -s https://checkpoint-api.hashicorp.com/v1/check/terraform | jq -r -M '.current_version')")
-tf_latest_install() {
-wget https://releases.hashicorp.com/terraform/${tf_latest_version}/terraform_${tf_latest_version}_${os}.zip && unzip terraform_${tf_latest_version}_${os} && mv terraform ~/bin/terraform && rm terraform_${tf_latest_version}_${os}.zip;
-}
-
-check () {
-  command -v "$1" >/dev/null
-}
-
-if check terraform; then
-  continue
-else
-  echo "Would you like to install/upgrade $tf?"
-fi
-
-if check terraform; then
-  continue
-else
-  read yn
-fi
-
-case $yn in
-  [Yy]* ) tf_latest_install && exit 1;;
-  [Nn]* ) exit 1;;
-  * ) :;;
-esac
 
 tf_file=`ls -1 *.tf 2>/dev/null | wc -l`
 if [ $tf_file = 0 ];
@@ -45,11 +27,12 @@ fi
 
 terraform_dir=$(which terraform)
 terraform_version=$(terraform state pull | jq -r '.terraform_version')
-
+tf_latest_version=$(echo "$(curl -s https://checkpoint-api.hashicorp.com/v1/check/terraform | jq -r -M '.current_version')")
 local_tf_version=$(terraform version | sed '1!d' | tr -d 'Terraform v')
 if [ "$(int $terraform_version)" -gt "$(int $local_tf_version)" ];
 then
   wget https://releases.hashicorp.com/terraform/$terraform_version/terraform_$terraform_version_$os.zip && unzip terraform_$terraform_version_$os.zip && mv terraform $terraform_dir && rm *.zip
 else
-  echo "Your version of Terraform is compatible."
+  echo "Remote backend Terraform version is $terraform_version. Your version is $local_tf_version."
+  echo "The latest release of Terraform is $tf_latest_version."
 fi
