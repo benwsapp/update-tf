@@ -12,14 +12,18 @@ else
 fi
 tf_latest_version=$(echo "$(curl -s https://checkpoint-api.hashicorp.com/v1/check/terraform | jq -r -M '.current_version')")
 tf_latest_install() {
-wget https://releases.hashicorp.com/terraform/$tf_latest_version/terraform_$tf_latest_version_$os.zip && unzip terraform_$tf_latest_version_$os.zip && mv terraform ~/bin/terraform && rm *.zip;
+wget https://releases.hashicorp.com/terraform/${tf_latest_version}/terraform_${tf_latest_version}_${os}.zip && unzip terraform_${tf_latest_version}_${os} && mv terraform ~/bin/terraform && rm terraform_${tf_latest_version}_${os}.zip;
 }
 
-tf="terraform"
-for check in "$tf"
-do
-  type $check >/dev/null 2>&1 || { echo >&2 "You don't even have $tf installed!" && read -p "Would you like to install/upgrade $tf?" yn;  }
-done
+check () {
+  command -v "$1" >/dev/null
+}
+
+if check terraform; then
+  continue
+else
+  read -p "Would you like to install/upgrade $tf?" yn
+fi
 
 case $yn in
   [Yy]* ) tf_latest_install;;
