@@ -26,8 +26,9 @@ else
 fi
 
 case $yn in
-  [Yy]* ) tf_latest_install;;
+  [Yy]* ) tf_latest_install && exit 1;;
   [Nn]* ) exit 1;;
+  * ) :;;
 esac
 
 tf_file=`ls -1 *.tf 2>/dev/null | wc -l`
