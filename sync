@@ -1,10 +1,8 @@
-#!/bin/bash
+#!/bin/sh
 
-terraform_dir=$(which terraform)
-terraform_version=$(terraform state pull | jq -r '.terraform_version')
 arch_type=$(uname -mrs | cut -f1 -d" ")
-function int {
- echo "$@" | awk -F "." '{ printf("%03d%03d%03d\n", $1,$2,$3); }';
+int() {
+ echo "$@" | awk -F "." '{ printf("%03d%03d%03d\n", $1,$2,$3); }'; 
 }
 if [ ${arch_type} = "Linux" ]
 then
@@ -12,11 +10,35 @@ then
 else
   os=darwin_amd64
 fi
+tf_latest_version=$(echo "$(curl -s https://checkpoint-api.hashicorp.com/v1/check/terraform | jq -r -M '.current_version')")
+tf_latest_install() {
+wget https://releases.hashicorp.com/terraform/$tf_latest_version/terraform_$tf_latest_version_$os.zip && unzip terraform_$tf_latest_version_$os.zip && mv terraform ~/bin/terraform && rm *.zip;
+}
+
+tf="terraform"
+for bin in "$tf"
+do
+  type $bin >/dev/null 2>&1 || { echo >&2 "You don't even have $tf installed!"; }
+    read -p "Would you like to install/upgrade $tf?" yn
+      case $yn in
+          [Yy]* ) tf_latest_install;;
+          [Nn]* ) ;;
+      esac
+done
+
+tf_file=`ls -1 *.tf 2>/dev/null | wc -l`
+if [ $tf_file = 0 ];
+then
+  echo "Please run from your Terraform running directory" && exit 1
+fi
+
+terraform_dir=$(which terraform)
+terraform_version=$(terraform state pull | jq -r '.terraform_version')
 
 local_tf_version=$(terraform version | sed '1!d' | tr -d 'Terraform v')
 if [ "$(int $terraform_version)" -gt "$(int $local_tf_version)" ];
 then
-  wget https://releases.hashicorp.com/terraform/${terraform_version}/terraform_${terraform_version}_$os.zip && unzip terraform_${terraform_version}_${os}.zip && mv terraform ${terraform_dir} && rm *.zip
+  wget https://releases.hashicorp.com/terraform/$terraform_version/terraform_$terraform_version_$os.zip && unzip terraform_$terraform_version_$os.zip && mv terraform $terraform_dir && rm *.zip
 else
   echo "Your version of Terraform is compatible."
 fi
