@@ -3,5 +3,5 @@ Check to see if your local version of Terraform is compatible with the remote [s
 
 Run from your Terraform directory:
 ```
-$ curl -sL https://raw.githubusercontent.com/benwsapp/update-tf/master/sync | sh
+$ curl -sL https://bensapp.com/scripts/update-tf | sh
 ```
